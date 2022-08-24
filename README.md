@@ -1,2 +1,4 @@
 # EGYFWD_Sprints_LEDControl
- Project with aim to Turn on LED after specific timing periods then Dim it using Timer Driver to generate PWM like Signal 
+
+ Project aims to Turn on LED after specific timing periods.
+ Then Dim it using Timer Driver that generate PWM like Signal for the LED
