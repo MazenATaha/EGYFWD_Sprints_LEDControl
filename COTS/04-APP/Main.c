@@ -36,9 +36,6 @@ u16 u8G_DimmingOnTime = 0;
 u16 U8G_TotalDimmingTime = 100;
 u16 u8G_DimmingOffTime = 1;
 
-// Leds fading without flickering need 10 Milliseconds to act accordingly
-// 10 milliseconds means 0.01 * 16000000
-// To find segmented time we divide (Total time-1) / 0.01*C_CLK
 
 void LED_TogglingON(void);
 void LED_Dimming(void);
@@ -110,8 +107,6 @@ void LED_Dimming(void)
 	}
 	GPT_Notification_T0(LED_Dimming);
 	GPT_StartTimer(T0, u8G_Timer_value2);
-
-
 }
 
 void LED_Timer_Fire(u32 Timer_value)
