@@ -16,6 +16,8 @@
  *********************************************************************************************************************/
 #include "../COTS/02-LIB/Common/STD_TYPES.h"
 #include "../COTS/02-LIB/Common/BIT_MATH.h"
+#include "../COTS/02-LIB/Common/TM4C123.h"
+
 #include "../COTS/01-MCAL/03-GPIO/INC/GPIO_interface.h"
 #include "../COTS/01-MCAL/03-GPIO/INC/GPIO_private.h"
 #include "../COTS/01-MCAL/03-GPIO/INC/GPIO_Config.h"
@@ -65,7 +67,16 @@ void GPIO_SetPinValue(GPIO_ChannelType ChannelId, GPIO_LevelType Level)
 	GPIO_PinNo	  PINi	= ChannelId % 10;
 	
 	SET_BIT(GPIODIR(PORTi), ChannelId);
-	GPIODATA(PORTi).R |= Level << PINi;
+	if (Level==HIGH)
+	{
+		GPIODATA(PORTi).R |= Level << PINi;
+	}else if (Level==LOW)
+	{
+		GPIODATA(PORTi).R &= ~ (1 << (PINi));
+	}
+	
+	
+	
 
 }
 
