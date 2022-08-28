@@ -27,9 +27,10 @@
 #define Fading_LOWTimer (1 / 1000) * C_CLK
 #define TimerAfterFading (TimerByUser - 1)
 
-u8 u8G_LEDSTATE = LOW;
-u8 PWM_State = LOW;
+u8 u8G_LEDSTATE = HIGH;
+u8 PWM_State = HIGH;
 u32 u8G_TimerValue2 = C_CLK * LEDMINACTIVETIME;
+u32 u8G_Timer_value2 = 0;
 
 u16 u8G_DimmingOnTime = 0;
 u16 U8G_TotalDimmingTime = 100;
@@ -52,9 +53,11 @@ int main(void)
 	PORT_Init();
 	GPT_Init();
 
+
+	LED_Timer_Fire((TimerByUser * C_CLK)); // 16Mhz - > 1sec
+
 	while (1)
 	{
-		LED_Timer_Fire((TimerByUser * C_CLK)); // 16Mhz - > 1sec
 	}
 	return 0;
 }
@@ -63,8 +66,10 @@ void LED_TogglingON(void)
 {
 	GPIO_SetPinValue(PF2, LOW);
 	u8G_LEDSTATE = LOW;
-	u8G_DimmingOffTime=0;
 	GPT_Notification_T0(LED_TogglingOFF);
+
+	//u8G_DimmingOffTime=1;
+	//GPT_Notification_T0(LED_Dimming);
 
 }
 
@@ -72,7 +77,8 @@ void LED_TogglingOFF(void)
 {
 	GPIO_SetPinValue(PF2, HIGH);
 	u8G_LEDSTATE = HIGH;
-	GPT_Notification_T0(LED_Dimming);
+	GPT_Notification_T0(LED_TogglingON);
+
 
 }
 void LED_Dimming(void)
@@ -81,12 +87,15 @@ void LED_Dimming(void)
 	{
 		GPIO_SetPinValue(PF2, LOW);
 		u8G_LEDSTATE = LOW;
-		GPT_Notification_T0(LED_TogglingON);
+		GPT_Notification_T0(LED_TogglingOFF);
+		GPT_StartTimer(T0, TimerAfterFading * C_CLK);
+
 
 	}
 	else
 	{
-		// Implementation of Dimmin Sequence To use timer as PWM  still in progress
+		u8G_DimmingOnTime = U8G_TotalDimmingTime - u8G_DimmingOffTime;
+		u8G_Timer_value2 = (u8G_DimmingOnTime / 1000) * C_CLK;
 		if (PWM_State == HIGH)
 		{
 			u8G_DimmingOffTime++;
@@ -99,19 +108,22 @@ void LED_Dimming(void)
 			PWM_State = HIGH;
 		}
 	}
+	GPT_Notification_T0(LED_Dimming);
+	GPT_StartTimer(T0, u8G_Timer_value2);
+
+
 }
 
 void LED_Timer_Fire(u32 Timer_value)
 {
 
-	u32 Timer_value2 = 0;
 	GPT_EnableNotification(T0);
 	if (u8G_LEDSTATE == HIGH)
 	{
 		GPT_Notification_T0(LED_TogglingON);
 		GPT_StartTimer(T0, Timer_value);
 	}
-	else if (u8G_LEDSTATE == LOW)
+	/* else if (u8G_LEDSTATE == LOW)
 	{
 		if (u8G_DimmingOffTime <= 90)
 		{
@@ -119,15 +131,15 @@ void LED_Timer_Fire(u32 Timer_value)
 			if (PWM_State == HIGH)
 			{
 				u8G_DimmingOnTime = U8G_TotalDimmingTime - u8G_DimmingOffTime;
-				Timer_value2 = (u8G_DimmingOnTime / 1000) * C_CLK;
+				u8G_Timer_value2 = (u8G_DimmingOnTime / 1000) * C_CLK;
 				GPT_Notification_T0(LED_Dimming);
-				GPT_StartTimer(T0, Timer_value2);
+				GPT_StartTimer(T0, u8G_Timer_value2);
 			}
 			else if (PWM_State == LOW)
 			{
-				Timer_value2 = Fading_LOWTimer;
+				u8G_Timer_value2 = Fading_LOWTimer;
 				GPT_Notification_T0(LED_Dimming);
-				GPT_StartTimer(T0, Timer_value2);
+				GPT_StartTimer(T0, u8G_Timer_value2);
 			}
 		}
 		else
@@ -135,7 +147,7 @@ void LED_Timer_Fire(u32 Timer_value)
 			GPT_Notification_T0(LED_TogglingOFF);
 			GPT_StartTimer(T0, TimerAfterFading * C_CLK);
 		}
-	}
+	}*/
 }
 
 /**********************************************************************************************************************
